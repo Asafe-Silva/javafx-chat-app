@@ -25,7 +25,8 @@ public class ChatApplication extends Application {
      *   serão visíveis e em qual porta o servidor escuta.
      */
     
-    private static final int MAX_CLIENTS = 5;
+    // Aumentado para suportar mais 15 clientes além do valor original
+    private static final int MAX_CLIENTS = 20;
     private static final int PORT = 8888;
     
     @Override
@@ -46,7 +47,15 @@ public class ChatApplication extends Application {
         }
         
         Scene scene = new Scene(tabPane, 1000, 700);
-        primaryStage.setTitle("Sistema de Chat - Servidor e Clientes");
+        // Aplicar a paleta de cores (arquivo CSS em resources)
+        try {
+            scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        } catch (Exception e) {
+            // Se o CSS não for encontrado, segue sem stylesheet (não quebra a inicialização)
+        }
+
+        // Novo título solicitado
+        primaryStage.setTitle("Fala Me!");
         primaryStage.setScene(scene);
         primaryStage.show();
         

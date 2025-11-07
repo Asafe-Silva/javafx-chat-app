@@ -61,7 +61,8 @@ public class ServerTab {
                     roomNameField.clear();
                     log("Sala criada: " + roomName);
                 } else {
-                    log("Erro: Não foi possível criar a sala (máximo 5 salas)");
+                    // Mensagem atualizada para refletir novo limite de salas
+                    log("Erro: Não foi possível criar a sala (máximo 15 salas)");
                 }
             }
         });

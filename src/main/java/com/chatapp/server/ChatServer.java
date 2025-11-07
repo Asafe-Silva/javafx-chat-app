@@ -28,7 +28,8 @@ public class ChatServer {
      * - Tratamento de erros é simples; falhas de I/O são logadas no ServerTab.
      */
     
-    private static final int MAX_ROOMS = 5;
+    // Aumentado para permitir 10 salas a mais (total 15)
+    private static final int MAX_ROOMS = 15;
     
     private int port;
     private ServerSocket serverSocket;
