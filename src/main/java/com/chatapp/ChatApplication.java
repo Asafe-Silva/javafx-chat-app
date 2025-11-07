@@ -2,8 +2,12 @@ package com.chatapp;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import com.chatapp.server.ServerTab;
 import com.chatapp.client.ClientTab;
@@ -25,8 +29,8 @@ public class ChatApplication extends Application {
      *   serão visíveis e em qual porta o servidor escuta.
      */
     
-    // Aumentado para suportar mais 15 clientes além do valor original
-    private static final int MAX_CLIENTS = 20;
+    // Mantemos apenas duas abas: SERVIDOR e CLIENTE (a seleção de usuários
+    // fica dentro da aba CLIENTE)
     private static final int PORT = 8888;
     
     @Override
@@ -39,12 +43,32 @@ public class ChatApplication extends Application {
         Tab serverTabUI = new Tab("SERVIDOR", serverTab.getView());
         tabPane.getTabs().add(serverTabUI);
         
-        // Create Client Tabs
-        for (int i = 1; i <= MAX_CLIENTS; i++) {
-            ClientTab clientTab = new ClientTab(i, "localhost", PORT);
-            Tab clientTabUI = new Tab("CLIENTE " + i, clientTab.getView());
-            tabPane.getTabs().add(clientTabUI);
-        }
+        // Create a Clients container tab which allows adding multiple client instances
+        BorderPane clientsContainer = new BorderPane();
+        // Top controls: botão para criar novo cliente
+        HBox topControls = new HBox(10);
+        Button addClientBtn = new Button("Adicionar Cliente");
+        topControls.getChildren().add(addClientBtn);
+        clientsContainer.setTop(topControls);
+
+        // Inner TabPane to hold multiple clients
+        TabPane clientsPane = new TabPane();
+        clientsPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
+        clientsContainer.setCenter(clientsPane);
+
+        // Counter para identificar clientes
+        final int[] clientCounter = {0};
+        addClientBtn.setOnAction(e -> {
+            clientCounter[0]++;
+            ClientTab ct = new ClientTab(clientCounter[0], "localhost", PORT);
+            Tab t = new Tab("CLIENTE " + clientCounter[0], ct.getView());
+            clientsPane.getTabs().add(t);
+            clientsPane.getSelectionModel().select(t);
+        });
+
+        // adiciona a aba de clientes ao TabPane principal
+        Tab clientsTab = new Tab("CLIENTES", clientsContainer);
+        tabPane.getTabs().add(clientsTab);
         
         Scene scene = new Scene(tabPane, 1000, 700);
         // Aplicar a paleta de cores (arquivo CSS em resources)
@@ -54,8 +78,8 @@ public class ChatApplication extends Application {
             // Se o CSS não for encontrado, segue sem stylesheet (não quebra a inicialização)
         }
 
-        // Novo título solicitado
-        primaryStage.setTitle("Fala Me!");
+    // Título do projeto
+    primaryStage.setTitle("Fale Me!");
         primaryStage.setScene(scene);
         primaryStage.show();
         

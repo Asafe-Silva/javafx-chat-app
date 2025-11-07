@@ -71,6 +71,28 @@ public class ClientHandler implements Runnable {
             case CHAT_MESSAGE:
                 handleChatMessage(message);
                 break;
+            case TYPING:
+            case STOP_TYPING:
+            case ERASING:
+            case STOP_ERASING:
+                handleActivity(message);
+                break;
+            case REPORT_MESSAGE:
+                // message.username contains target username (the one being reported)
+                String target = message.getUsername();
+                server.getServerTab().log("Denúncia: " + username + " denunciou " + target + ": " + message.getContent());
+                if (target != null) {
+                    ClientHandler tgt = server.getClientHandler(target);
+                    if (tgt != null) {
+                        Message notify = new Message(Message.Type.REPORT_NOTIFICATION);
+                        notify.setContent("Você foi denunciado por: " + username + " - Mensagem: " + message.getContent());
+                        tgt.sendMessage(notify);
+                    }
+                }
+                break;
+            case REPORT_ROOM:
+                server.getServerTab().log("Denúncia de sala de " + username + ": " + message.getRoomName() + " - " + message.getContent());
+                break;
             case LOGOUT:
                 disconnect();
                 break;
@@ -79,8 +101,15 @@ public class ClientHandler implements Runnable {
     
     private void handleLogin(Message message) {
         username = message.getUsername();
-        server.addClient(username, this);
-        
+        boolean ok = server.addClient(username, this);
+        if (!ok) {
+            Message response = new Message(Message.Type.ERROR);
+            response.setContent("Usuário já conectado (apenas uma sessão por conta permitida)");
+            sendMessage(response);
+            // do not register this handler as active; close connection shortly
+            disconnect();
+            return;
+        }
         Message response = new Message(Message.Type.LOGIN);
         response.setContent("Login realizado com sucesso");
         sendMessage(response);
@@ -120,7 +149,16 @@ public class ClientHandler implements Runnable {
     
     private void handleChatMessage(Message message) {
         if (currentRoom != null) {
-            server.broadcastToRoom(currentRoom, username, message.getContent());
+            // preserve color information when broadcasting
+            server.broadcastToRoom(currentRoom, username, message.getContent(), message.getColor());
+        }
+    }
+
+
+    private void handleActivity(Message message) {
+        if (currentRoom != null) {
+            Message.Type t = message.getType();
+            server.notifyActivity(currentRoom, username, t);
         }
     }
     

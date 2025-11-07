@@ -104,16 +104,43 @@ public class ChatClient {
                 clientTab.showRoomSelectionView(username);
                 requestRooms();
                 break;
+            case ROOM_DELETED:
+                clientTab.appendChatMessage("*** A sala '" + message.getRoomName() + "' foi removida pelo servidor ***");
+                clientTab.showRoomSelectionView(username);
+                requestRooms();
+                break;
+            case USER_KICKED:
+                clientTab.appendChatMessage("*** Você foi expulso do servidor: " + message.getContent() + " ***");
+                disconnect();
+                clientTab.showLoginView();
+                break;
             case CHAT_MESSAGE:
-                String chatMsg = message.getUsername() + ": " + message.getContent();
-                clientTab.appendChatMessage(chatMsg);
+                // preserve color information and delegate to UI for styled display
+                clientTab.appendChatMessage(message.getUsername(), message.getContent(), message.getColor());
+                break;
+            case USER_TYPING:
+                // message.content holds the username who is typing
+                clientTab.showTypingIndicator(message.getContent());
+                break;
+            case USER_STOPPED_TYPING:
+                clientTab.clearTypingIndicator(message.getContent());
+                break;
+            case USER_ERASING:
+                clientTab.showErasingIndicator(message.getContent());
+                break;
+            case USER_STOPPED_ERASING:
+                clientTab.clearErasingIndicator(message.getContent());
+                break;
+            case REPORT_NOTIFICATION:
+                clientTab.appendChatMessage("*** DENÚNCIA: " + message.getContent() + " ***");
                 break;
             case USER_JOINED:
             case USER_LEFT:
                 clientTab.appendChatMessage("*** " + message.getContent() + " ***");
                 break;
             case ERROR:
-                clientTab.appendChatMessage("ERRO: " + message.getContent());
+                // show error prominently on the login/room UI
+                clientTab.showError(message.getContent());
                 break;
         }
     }
@@ -135,8 +162,46 @@ public class ChatClient {
     }
     
     public void sendChatMessage(String content) {
+        sendChatMessage(content, null);
+    }
+
+    public void sendChatMessage(String content, String color) {
         Message msg = new Message(Message.Type.CHAT_MESSAGE);
         msg.setContent(content);
+        msg.setColor(color);
+        sendMessage(msg);
+    }
+
+    public void reportMessage(String content) {
+        Message msg = new Message(Message.Type.REPORT_MESSAGE);
+        msg.setContent(content);
+        sendMessage(msg);
+    }
+
+    // report a specific user (targetUsername)
+    public void reportMessage(String targetUsername, String content) {
+        Message msg = new Message(Message.Type.REPORT_MESSAGE);
+        msg.setUsername(targetUsername);
+        msg.setContent(content);
+        sendMessage(msg);
+    }
+
+    public void sendErasing(String roomName, boolean erasing) {
+        Message msg = new Message(erasing ? Message.Type.ERASING : Message.Type.STOP_ERASING);
+        msg.setRoomName(roomName);
+        sendMessage(msg);
+    }
+
+    public void reportRoom(String roomName, String reason) {
+        Message msg = new Message(Message.Type.REPORT_ROOM);
+        msg.setRoomName(roomName);
+        msg.setContent(reason);
+        sendMessage(msg);
+    }
+
+    public void sendTyping(String roomName, boolean typing) {
+        Message msg = new Message(typing ? Message.Type.TYPING : Message.Type.STOP_TYPING);
+        msg.setRoomName(roomName);
         sendMessage(msg);
     }
     

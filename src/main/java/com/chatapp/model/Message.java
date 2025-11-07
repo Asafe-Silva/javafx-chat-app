@@ -30,12 +30,31 @@ public class Message implements Serializable {
         ERROR,
         USER_JOINED,
         USER_LEFT
+        ,
+        REPORT_MESSAGE,
+        REPORT_ROOM,
+        ROOM_DELETED,
+        USER_KICKED,
+        // typing indicators (sent from client to server)
+        TYPING,
+        STOP_TYPING,
+        // notifications (sent from server to clients)
+        USER_TYPING,
+        USER_STOPPED_TYPING
+        ,
+        ERASING,
+        STOP_ERASING,
+        USER_ERASING,
+        USER_STOPPED_ERASING,
+        REPORT_NOTIFICATION
     }
     
     private Type type;
     private String username;
     private String roomName;
     private String content;
+    // color hex (ex: #ff0000) associated with the message (sent by client)
+    private String color;
     private Object data;
     
     public Message(Type type) {
@@ -46,6 +65,9 @@ public class Message implements Serializable {
         this.type = type;
         this.content = content;
     }
+
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
     
     // Getters and Setters
     public Type getType() { return type; }
